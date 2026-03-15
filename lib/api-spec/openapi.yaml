@@ -1,0 +1,1755 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: TehTruth Dev Studio API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: wallets
+    description: Wallet management
+  - name: chains
+    description: Supported chain configurations
+  - name: activity
+    description: Activity log
+  - name: tokens
+    description: Token deployment and management
+  - name: contracts
+    description: Contract registry and interaction
+  - name: bridges
+    description: Cross-chain bridge transfers
+  - name: mev
+    description: MEV and ERC-4337 operations
+  - name: tools
+    description: Developer utility tools
+  - name: delegations
+    description: EIP-7702 EOA delegation management
+  - name: session-keys
+    description: Smart account session key management
+  - name: safe-modules
+    description: Safe module management
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /chains:
+    get:
+      operationId: listChains
+      tags: [chains]
+      summary: List supported chains
+      responses:
+        "200":
+          description: List of supported chains
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Chain"
+
+  /wallets:
+    get:
+      operationId: listWallets
+      tags: [wallets]
+      summary: List all saved wallets
+      responses:
+        "200":
+          description: List of wallets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Wallet"
+    post:
+      operationId: createWallet
+      tags: [wallets]
+      summary: Save a deployed wallet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWalletBody"
+      responses:
+        "201":
+          description: Wallet saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+
+  /wallets/{id}:
+    get:
+      operationId: getWallet
+      tags: [wallets]
+      summary: Get wallet by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Wallet details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateWallet
+      tags: [wallets]
+      summary: Update wallet name or settings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWalletBody"
+      responses:
+        "200":
+          description: Wallet updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteWallet
+      tags: [wallets]
+      summary: Remove a wallet from registry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /wallets/{id}/activity:
+    get:
+      operationId: getWalletActivity
+      tags: [activity]
+      summary: Get activity log for a wallet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Activity entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityEntry"
+
+  /activity:
+    post:
+      operationId: createActivity
+      tags: [activity]
+      summary: Log a new activity entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateActivityBody"
+      responses:
+        "201":
+          description: Activity logged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityEntry"
+
+  /tokens:
+    get:
+      operationId: listTokens
+      tags: [tokens]
+      summary: List all tracked tokens
+      responses:
+        "200":
+          description: List of tokens
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Token"
+    post:
+      operationId: createToken
+      tags: [tokens]
+      summary: Register a deployed token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTokenBody"
+      responses:
+        "201":
+          description: Token saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Token"
+
+  /tokens/{id}:
+    get:
+      operationId: getToken
+      tags: [tokens]
+      summary: Get token by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Token details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Token"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteToken
+      tags: [tokens]
+      summary: Remove a token
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /contracts:
+    get:
+      operationId: listContracts
+      tags: [contracts]
+      summary: List registered contracts
+      responses:
+        "200":
+          description: List of contracts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Contract"
+    post:
+      operationId: createContract
+      tags: [contracts]
+      summary: Register a contract with ABI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContractBody"
+      responses:
+        "201":
+          description: Contract registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contract"
+
+  /contracts/{id}:
+    get:
+      operationId: getContract
+      tags: [contracts]
+      summary: Get contract by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Contract details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contract"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteContract
+      tags: [contracts]
+      summary: Remove a contract
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /bridges:
+    get:
+      operationId: listBridgeTransfers
+      tags: [bridges]
+      summary: List bridge transfers
+      responses:
+        "200":
+          description: List of bridge transfers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BridgeTransfer"
+    post:
+      operationId: createBridgeTransfer
+      tags: [bridges]
+      summary: Log a bridge transfer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBridgeTransferBody"
+      responses:
+        "201":
+          description: Transfer logged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BridgeTransfer"
+
+  /bridges/{id}:
+    get:
+      operationId: getBridgeTransfer
+      tags: [bridges]
+      summary: Get bridge transfer by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Transfer details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BridgeTransfer"
+        "404":
+          description: Not found
+
+  /mev:
+    get:
+      operationId: listMevOperations
+      tags: [mev]
+      summary: List MEV operations
+      responses:
+        "200":
+          description: List of MEV operations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MevOperation"
+    post:
+      operationId: createMevOperation
+      tags: [mev]
+      summary: Create a MEV operation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMevOperationBody"
+      responses:
+        "201":
+          description: Operation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MevOperation"
+
+  /mev/{id}:
+    get:
+      operationId: getMevOperation
+      tags: [mev]
+      summary: Get MEV operation by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Operation details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MevOperation"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateMevOperation
+      tags: [mev]
+      summary: Update MEV operation status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMevOperationBody"
+      responses:
+        "200":
+          description: Operation updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MevOperation"
+        "404":
+          description: Not found
+
+  /tools/encode:
+    post:
+      operationId: encodeCalldata
+      tags: [tools]
+      summary: ABI-encode function calldata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EncodeCalldataBody"
+      responses:
+        "200":
+          description: Encoded calldata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EncodedResult"
+
+  /tools/decode:
+    post:
+      operationId: decodeCalldata
+      tags: [tools]
+      summary: Decode hex calldata with ABI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DecodeCalldataBody"
+      responses:
+        "200":
+          description: Decoded result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecodedResult"
+
+  /tools/checksum:
+    post:
+      operationId: checksumAddress
+      tags: [tools]
+      summary: Compute EIP-55 checksum address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChecksumBody"
+      responses:
+        "200":
+          description: Checksummed address
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChecksumResult"
+
+  /tools/keccak256:
+    post:
+      operationId: keccak256Hash
+      tags: [tools]
+      summary: Compute Keccak256 hash
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HashBody"
+      responses:
+        "200":
+          description: Hash result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HashResult"
+
+  /delegations:
+    get:
+      operationId: listDelegations
+      tags: [delegations]
+      summary: List EIP-7702 delegations
+      responses:
+        "200":
+          description: List of delegations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Delegation"
+    post:
+      operationId: createDelegation
+      tags: [delegations]
+      summary: Register an EIP-7702 delegation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDelegationBody"
+      responses:
+        "201":
+          description: Delegation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delegation"
+
+  /delegations/{id}:
+    get:
+      operationId: getDelegation
+      tags: [delegations]
+      summary: Get delegation by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Delegation details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delegation"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateDelegation
+      tags: [delegations]
+      summary: Update delegation (revoke)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDelegationBody"
+      responses:
+        "200":
+          description: Delegation updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delegation"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteDelegation
+      tags: [delegations]
+      summary: Remove delegation record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /session-keys:
+    get:
+      operationId: listSessionKeys
+      tags: [session-keys]
+      summary: List session keys
+      responses:
+        "200":
+          description: List of session keys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SessionKey"
+    post:
+      operationId: createSessionKey
+      tags: [session-keys]
+      summary: Create a session key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSessionKeyBody"
+      responses:
+        "201":
+          description: Session key created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionKey"
+
+  /wallets/predict-address:
+    post:
+      operationId: predictWalletAddress
+      tags: [wallets]
+      summary: Predict deterministic Safe address via CREATE2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PredictAddressBody"
+      responses:
+        "200":
+          description: Predicted address
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PredictAddressResult"
+
+  /wallets/{id}/modules:
+    get:
+      operationId: listWalletModules
+      tags: [safe-modules]
+      summary: List modules enabled on a wallet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of modules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SafeModule"
+
+  /safe-modules:
+    get:
+      operationId: listSafeModules
+      tags: [safe-modules]
+      summary: List all Safe modules
+      responses:
+        "200":
+          description: List of modules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SafeModule"
+    post:
+      operationId: createSafeModule
+      tags: [safe-modules]
+      summary: Enable a module on a Safe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSafeModuleBody"
+      responses:
+        "201":
+          description: Module enabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SafeModule"
+
+  /safe-modules/{id}:
+    get:
+      operationId: getSafeModule
+      tags: [safe-modules]
+      summary: Get module by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Module details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SafeModule"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateSafeModule
+      tags: [safe-modules]
+      summary: Update module (enable/disable)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSafeModuleBody"
+      responses:
+        "200":
+          description: Module updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SafeModule"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteSafeModule
+      tags: [safe-modules]
+      summary: Remove module record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /session-keys/{id}:
+    get:
+      operationId: getSessionKey
+      tags: [session-keys]
+      summary: Get session key by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Session key details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionKey"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateSessionKey
+      tags: [session-keys]
+      summary: Update or revoke a session key
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSessionKeyBody"
+      responses:
+        "200":
+          description: Session key updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionKey"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteSessionKey
+      tags: [session-keys]
+      summary: Remove session key record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    Chain:
+      type: object
+      properties:
+        id:
+          type: integer
+        chainId:
+          type: integer
+        name:
+          type: string
+        shortName:
+          type: string
+        rpcUrl:
+          type: string
+        privateRpcUrl:
+          type: ["string", "null"]
+        explorerUrl:
+          type: string
+        iconUrl:
+          type: ["string", "null"]
+        nativeCurrency:
+          type: string
+        isTestnet:
+          type: boolean
+      required:
+        - id
+        - chainId
+        - name
+        - shortName
+        - rpcUrl
+        - explorerUrl
+        - nativeCurrency
+        - isTestnet
+
+    Wallet:
+      type: object
+      properties:
+        id:
+          type: integer
+        address:
+          type: string
+        name:
+          type: string
+        chainId:
+          type: integer
+        walletType:
+          type: string
+        owners:
+          type: array
+          items:
+            type: string
+        threshold:
+          type: integer
+        salt:
+          type: ["string", "null"]
+        deployTxHash:
+          type: ["string", "null"]
+        privateTxDefault:
+          type: boolean
+        is4337Enabled:
+          type: boolean
+        entryPointVersion:
+          type: ["string", "null"]
+        implementation:
+          type: ["string", "null"]
+        factoryAddress:
+          type: ["string", "null"]
+        safeVersion:
+          type: ["string", "null"]
+        fallbackHandler:
+          type: ["string", "null"]
+        saltNonce:
+          type: ["string", "null"]
+        setupData:
+          type: ["string", "null"]
+        predictedAddress:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - address
+        - name
+        - chainId
+        - walletType
+        - owners
+        - threshold
+        - privateTxDefault
+        - is4337Enabled
+        - createdAt
+
+    CreateWalletBody:
+      type: object
+      properties:
+        address:
+          type: string
+        name:
+          type: string
+        chainId:
+          type: integer
+        walletType:
+          type: string
+        owners:
+          type: array
+          items:
+            type: string
+        threshold:
+          type: integer
+        salt:
+          type: ["string", "null"]
+        deployTxHash:
+          type: ["string", "null"]
+        privateTxDefault:
+          type: boolean
+        is4337Enabled:
+          type: boolean
+        entryPointVersion:
+          type: ["string", "null"]
+        implementation:
+          type: ["string", "null"]
+        factoryAddress:
+          type: ["string", "null"]
+        safeVersion:
+          type: ["string", "null"]
+        fallbackHandler:
+          type: ["string", "null"]
+        saltNonce:
+          type: ["string", "null"]
+        setupData:
+          type: ["string", "null"]
+        predictedAddress:
+          type: ["string", "null"]
+      required:
+        - address
+        - name
+        - chainId
+        - walletType
+        - owners
+        - threshold
+
+    UpdateWalletBody:
+      type: object
+      properties:
+        name:
+          type: string
+        privateTxDefault:
+          type: boolean
+        is4337Enabled:
+          type: boolean
+
+    ActivityEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        walletId:
+          type: integer
+        txHash:
+          type: ["string", "null"]
+        action:
+          type: string
+        details:
+          type: ["string", "null"]
+        wasPrivate:
+          type: boolean
+        chainId:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - walletId
+        - action
+        - wasPrivate
+        - chainId
+        - createdAt
+
+    CreateActivityBody:
+      type: object
+      properties:
+        walletId:
+          type: integer
+        txHash:
+          type: ["string", "null"]
+        action:
+          type: string
+        details:
+          type: ["string", "null"]
+        wasPrivate:
+          type: boolean
+        chainId:
+          type: integer
+      required:
+        - walletId
+        - action
+        - wasPrivate
+        - chainId
+
+    Token:
+      type: object
+      properties:
+        id:
+          type: integer
+        address:
+          type: string
+        name:
+          type: string
+        symbol:
+          type: string
+        decimals:
+          type: integer
+        tokenType:
+          type: string
+        chainId:
+          type: integer
+        totalSupply:
+          type: ["string", "null"]
+        deployTxHash:
+          type: ["string", "null"]
+        deployer:
+          type: ["string", "null"]
+        wasPrivate:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - address
+        - name
+        - symbol
+        - decimals
+        - tokenType
+        - chainId
+        - wasPrivate
+        - createdAt
+
+    CreateTokenBody:
+      type: object
+      properties:
+        address:
+          type: string
+        name:
+          type: string
+        symbol:
+          type: string
+        decimals:
+          type: integer
+        tokenType:
+          type: string
+        chainId:
+          type: integer
+        totalSupply:
+          type: ["string", "null"]
+        deployTxHash:
+          type: ["string", "null"]
+        deployer:
+          type: ["string", "null"]
+        wasPrivate:
+          type: boolean
+      required:
+        - address
+        - name
+        - symbol
+        - tokenType
+        - chainId
+
+    Contract:
+      type: object
+      properties:
+        id:
+          type: integer
+        address:
+          type: string
+        name:
+          type: string
+        chainId:
+          type: integer
+        abi: {}
+        tags:
+          type: ["array", "null"]
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - address
+        - name
+        - chainId
+        - abi
+        - createdAt
+
+    CreateContractBody:
+      type: object
+      properties:
+        address:
+          type: string
+        name:
+          type: string
+        chainId:
+          type: integer
+        abi: {}
+        tags:
+          type: ["array", "null"]
+          items:
+            type: string
+      required:
+        - address
+        - name
+        - chainId
+        - abi
+
+    BridgeTransfer:
+      type: object
+      properties:
+        id:
+          type: integer
+        protocol:
+          type: string
+        sourceChainId:
+          type: integer
+        destChainId:
+          type: integer
+        tokenAddress:
+          type: string
+        tokenSymbol:
+          type: string
+        amount:
+          type: string
+        sender:
+          type: string
+        recipient:
+          type: string
+        sourceTxHash:
+          type: ["string", "null"]
+        destTxHash:
+          type: ["string", "null"]
+        status:
+          type: string
+        wasPrivate:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - protocol
+        - sourceChainId
+        - destChainId
+        - tokenAddress
+        - tokenSymbol
+        - amount
+        - sender
+        - recipient
+        - status
+        - wasPrivate
+        - createdAt
+
+    CreateBridgeTransferBody:
+      type: object
+      properties:
+        protocol:
+          type: string
+        sourceChainId:
+          type: integer
+        destChainId:
+          type: integer
+        tokenAddress:
+          type: string
+        tokenSymbol:
+          type: string
+        amount:
+          type: string
+        sender:
+          type: string
+        recipient:
+          type: string
+        sourceTxHash:
+          type: ["string", "null"]
+        destTxHash:
+          type: ["string", "null"]
+        status:
+          type: string
+        wasPrivate:
+          type: boolean
+      required:
+        - protocol
+        - sourceChainId
+        - destChainId
+        - tokenAddress
+        - tokenSymbol
+        - amount
+        - sender
+        - recipient
+
+    MevOperation:
+      type: object
+      properties:
+        id:
+          type: integer
+        opType:
+          type: string
+        sender:
+          type: string
+        chainId:
+          type: integer
+        target:
+          type: ["string", "null"]
+        calldata:
+          type: ["string", "null"]
+        value:
+          type: ["string", "null"]
+        nonce:
+          type: ["string", "null"]
+        initCode:
+          type: ["string", "null"]
+        callGasLimit:
+          type: ["string", "null"]
+        verificationGasLimit:
+          type: ["string", "null"]
+        preVerificationGas:
+          type: ["string", "null"]
+        maxFeePerGas:
+          type: ["string", "null"]
+        maxPriorityFeePerGas:
+          type: ["string", "null"]
+        paymasterAndData:
+          type: ["string", "null"]
+        signature:
+          type: ["string", "null"]
+        paymaster:
+          type: ["string", "null"]
+        bundler:
+          type: ["string", "null"]
+        bundlerProvider:
+          type: ["string", "null"]
+        bundlerUrl:
+          type: ["string", "null"]
+        entryPointAddress:
+          type: ["string", "null"]
+        opHash:
+          type: ["string", "null"]
+        txHash:
+          type: ["string", "null"]
+        status:
+          type: string
+        wasPrivate:
+          type: boolean
+        metadata:
+          type: ["object", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - opType
+        - sender
+        - chainId
+        - status
+        - wasPrivate
+        - createdAt
+
+    CreateMevOperationBody:
+      type: object
+      properties:
+        opType:
+          type: string
+        sender:
+          type: string
+        chainId:
+          type: integer
+        target:
+          type: ["string", "null"]
+        calldata:
+          type: ["string", "null"]
+        value:
+          type: ["string", "null"]
+        nonce:
+          type: ["string", "null"]
+        initCode:
+          type: ["string", "null"]
+        callGasLimit:
+          type: ["string", "null"]
+        verificationGasLimit:
+          type: ["string", "null"]
+        preVerificationGas:
+          type: ["string", "null"]
+        maxFeePerGas:
+          type: ["string", "null"]
+        maxPriorityFeePerGas:
+          type: ["string", "null"]
+        paymasterAndData:
+          type: ["string", "null"]
+        signature:
+          type: ["string", "null"]
+        paymaster:
+          type: ["string", "null"]
+        bundler:
+          type: ["string", "null"]
+        bundlerProvider:
+          type: ["string", "null"]
+        bundlerUrl:
+          type: ["string", "null"]
+        entryPointAddress:
+          type: ["string", "null"]
+        status:
+          type: string
+        wasPrivate:
+          type: boolean
+        metadata:
+          type: ["object", "null"]
+      required:
+        - opType
+        - sender
+        - chainId
+
+    UpdateMevOperationBody:
+      type: object
+      properties:
+        status:
+          type: string
+        opHash:
+          type: ["string", "null"]
+        txHash:
+          type: ["string", "null"]
+        paymaster:
+          type: ["string", "null"]
+        bundler:
+          type: ["string", "null"]
+        bundlerProvider:
+          type: ["string", "null"]
+        bundlerUrl:
+          type: ["string", "null"]
+        entryPointAddress:
+          type: ["string", "null"]
+
+    EncodeCalldataBody:
+      type: object
+      properties:
+        functionSignature:
+          type: string
+        params:
+          type: array
+          items:
+            type: string
+      required:
+        - functionSignature
+        - params
+
+    EncodedResult:
+      type: object
+      properties:
+        encoded:
+          type: string
+        selector:
+          type: string
+      required:
+        - encoded
+        - selector
+
+    DecodeCalldataBody:
+      type: object
+      properties:
+        calldata:
+          type: string
+        abi:
+          type: array
+          items:
+            type: object
+      required:
+        - calldata
+        - abi
+
+    DecodedResult:
+      type: object
+      properties:
+        functionName:
+          type: string
+        params:
+          type: array
+          items:
+            type: object
+      required:
+        - functionName
+        - params
+
+    ChecksumBody:
+      type: object
+      properties:
+        address:
+          type: string
+      required:
+        - address
+
+    ChecksumResult:
+      type: object
+      properties:
+        checksummed:
+          type: string
+        isValid:
+          type: boolean
+      required:
+        - checksummed
+        - isValid
+
+    HashBody:
+      type: object
+      properties:
+        input:
+          type: string
+      required:
+        - input
+
+    HashResult:
+      type: object
+      properties:
+        hash:
+          type: string
+      required:
+        - hash
+
+    Delegation:
+      type: object
+      properties:
+        id:
+          type: integer
+        eoaAddress:
+          type: string
+        delegateAddress:
+          type: string
+        implementationType:
+          type: string
+        chainId:
+          type: integer
+        label:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+        txHash:
+          type: ["string", "null"]
+        wasPrivate:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - eoaAddress
+        - delegateAddress
+        - implementationType
+        - chainId
+        - isActive
+        - wasPrivate
+        - createdAt
+
+    CreateDelegationBody:
+      type: object
+      properties:
+        eoaAddress:
+          type: string
+        delegateAddress:
+          type: string
+        implementationType:
+          type: string
+        chainId:
+          type: integer
+        label:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+        txHash:
+          type: ["string", "null"]
+        wasPrivate:
+          type: boolean
+      required:
+        - eoaAddress
+        - delegateAddress
+        - implementationType
+        - chainId
+
+    UpdateDelegationBody:
+      type: object
+      properties:
+        isActive:
+          type: boolean
+        label:
+          type: ["string", "null"]
+
+    SessionKey:
+      type: object
+      properties:
+        id:
+          type: integer
+        walletAddress:
+          type: string
+        sessionPublicKey:
+          type: string
+        chainId:
+          type: integer
+        label:
+          type: ["string", "null"]
+        permissions:
+          type: ["object", "null"]
+        allowedTargets:
+          type: ["array", "null"]
+          items:
+            type: string
+        spendLimit:
+          type: ["string", "null"]
+        validAfter:
+          type: ["string", "null"]
+          format: date-time
+        validUntil:
+          type: ["string", "null"]
+          format: date-time
+        isRevoked:
+          type: boolean
+        txHash:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - walletAddress
+        - sessionPublicKey
+        - chainId
+        - isRevoked
+        - createdAt
+
+    CreateSessionKeyBody:
+      type: object
+      properties:
+        walletAddress:
+          type: string
+        sessionPublicKey:
+          type: string
+        chainId:
+          type: integer
+        label:
+          type: ["string", "null"]
+        permissions:
+          type: ["object", "null"]
+        allowedTargets:
+          type: ["array", "null"]
+          items:
+            type: string
+        spendLimit:
+          type: ["string", "null"]
+        validAfter:
+          type: ["string", "null"]
+          format: date-time
+        validUntil:
+          type: ["string", "null"]
+          format: date-time
+        txHash:
+          type: ["string", "null"]
+      required:
+        - walletAddress
+        - sessionPublicKey
+        - chainId
+
+    UpdateSessionKeyBody:
+      type: object
+      properties:
+        isRevoked:
+          type: boolean
+        label:
+          type: ["string", "null"]
+
+    PredictAddressBody:
+      type: object
+      properties:
+        owners:
+          type: array
+          items:
+            type: string
+        threshold:
+          type: integer
+        chainId:
+          type: integer
+        saltNonce:
+          type: string
+        safeVersion:
+          type: string
+        factoryAddress:
+          type: ["string", "null"]
+        fallbackHandler:
+          type: ["string", "null"]
+      required:
+        - owners
+        - threshold
+        - chainId
+        - saltNonce
+
+    PredictAddressResult:
+      type: object
+      properties:
+        predictedAddress:
+          type: string
+        factoryAddress:
+          type: string
+        saltNonce:
+          type: string
+        safeVersion:
+          type: string
+        chainId:
+          type: integer
+        initializerHash:
+          type: string
+      required:
+        - predictedAddress
+        - factoryAddress
+        - saltNonce
+        - safeVersion
+        - chainId
+        - initializerHash
+
+    SafeModule:
+      type: object
+      properties:
+        id:
+          type: integer
+        safeAddress:
+          type: string
+        moduleAddress:
+          type: string
+        chainId:
+          type: integer
+        moduleType:
+          type: string
+        label:
+          type: ["string", "null"]
+        isEnabled:
+          type: boolean
+        enableTxHash:
+          type: ["string", "null"]
+        disableTxHash:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - safeAddress
+        - moduleAddress
+        - chainId
+        - moduleType
+        - isEnabled
+        - createdAt
+
+    CreateSafeModuleBody:
+      type: object
+      properties:
+        safeAddress:
+          type: string
+        moduleAddress:
+          type: string
+        chainId:
+          type: integer
+        moduleType:
+          type: string
+        label:
+          type: ["string", "null"]
+        isEnabled:
+          type: boolean
+        enableTxHash:
+          type: ["string", "null"]
+      required:
+        - safeAddress
+        - moduleAddress
+        - chainId
+        - moduleType
+
+    UpdateSafeModuleBody:
+      type: object
+      properties:
+        isEnabled:
+          type: boolean
+        label:
+          type: ["string", "null"]
+        disableTxHash:
+          type: ["string", "null"]

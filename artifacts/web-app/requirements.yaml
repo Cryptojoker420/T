@@ -1,0 +1,13 @@
+packages:
+  "framer-motion": "Smooth page transitions and micro-interactions"
+  "zustand": "Global state management for active wallet and chain context"
+  "date-fns": "Date formatting for activity logs"
+
+images:
+  - path: "artifacts/web-app/public/images/hero-bg.png"
+    description: "Dark, sleek abstract background with glowing neon cyan and purple grid lines, professional high-tech blockchain developer studio vibe"
+    aspect_ratio: "16:9"
+
+notes:
+  - "Using Zustand for local wallet connection and privacy mode state"
+  - "Assuming React Query hooks are correctly generated and exported from @workspace/api-client-react"
